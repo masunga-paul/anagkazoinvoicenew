@@ -72,8 +72,9 @@ php artisan migrate --force || echo "==> [Warning] Migration exited with error, 
 echo "==> Running database seeder for initial roles and credentials..."
 php artisan db:seed --force || echo "==> [Warning] Seeder exited with error, continuing container boot..."
 
-# Create storage symbolic link
+# Create storage symbolic link and publish livewire assets
 php artisan storage:link --force || true
+php artisan livewire:publish --assets || true
 
 # Cache configurations, routes, and blade views for high-performance production execution
 if [ "${APP_ENV:-production}" = "production" ]; then
