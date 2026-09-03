@@ -32,9 +32,9 @@ COPY --from=vendor /app/vendor ./vendor
 RUN npm run build
 
 # ==========================================
-# STAGE 3: PHP 8.2 + Nginx Production Runtime
+# STAGE 3: PHP 8.4 + Nginx Production Runtime
 # ==========================================
-FROM php:8.2-fpm-alpine AS backend
+FROM php:8.4-fpm-alpine AS backend
 
 # Install system utilities and build dependencies
 RUN apk update && apk add --no-cache \
@@ -97,7 +97,7 @@ COPY --from=vendor /app/vendor /var/www/html/vendor
 COPY --from=frontend /app/public/build /var/www/html/public/build
 
 # Finish composer autoloader dump and package discovery
-RUN composer dump-autoload --optimize --no-dev
+RUN composer dump-autoload --optimize --no-dev --ignore-platform-reqs
 
 # Set directory permissions
 RUN chown -R www-data:www-data /var/www/html \
