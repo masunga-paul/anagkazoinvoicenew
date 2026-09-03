@@ -161,7 +161,9 @@ class CustomerManager extends Component
     public function saveCustomer(): void
     {
         if (auth()->user()?->isStaff()) {
-            abort(403, 'Unauthorized action: Staff cannot modify customer profiles.');
+            session()->flash('error', 'Unauthorized action: Staff cannot modify customer profiles.');
+            $this->showCustomerModal = false;
+            return;
         }
 
         $validated = $this->validate();
@@ -208,7 +210,9 @@ class CustomerManager extends Component
     public function deleteCustomer(): void
     {
         if (auth()->user()?->isStaff()) {
-            abort(403, 'Unauthorized action: Staff cannot delete customers.');
+            session()->flash('error', 'Unauthorized action: Staff cannot delete customers.');
+            $this->showDeleteModal = false;
+            return;
         }
 
         if ($this->deletingCustomerId) {

@@ -29,7 +29,8 @@ class Overview extends Component
     public function openResetDataModal(): void
     {
         if (auth()->user()?->isStaff()) {
-            abort(403, 'Unauthorized action: Staff cannot reset database records.');
+            session()->flash('error', 'Unauthorized action: Staff cannot reset database records.');
+            return;
         }
 
         $this->confirmResetText = '';
@@ -45,7 +46,9 @@ class Overview extends Component
     public function wipeOperationalData(): void
     {
         if (! auth()->check() || ! auth()->user()->isAdmin()) {
-            abort(403, 'Unauthorized action: Only Administrators can reset database data.');
+            session()->flash('error', 'Unauthorized action: Only Administrators can reset database data.');
+            $this->showResetDataModal = false;
+            return;
         }
 
         DB::transaction(function () {

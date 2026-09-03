@@ -41,7 +41,9 @@ class SecurityCredentials extends Component
     public function mount(): void
     {
         if (! auth()->check() || ! auth()->user()->isAdmin()) {
-            abort(403, 'Unauthorized access: Security credentials management is restricted to Administrators.');
+            session()->flash('error', 'Unauthorized access: Security credentials management is restricted to Administrators.');
+            $this->redirect(route('invoices.create'), navigate: true);
+            return;
         }
 
         $admin = auth()->user();

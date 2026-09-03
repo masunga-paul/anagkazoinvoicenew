@@ -40,7 +40,9 @@ class ReportsIndex extends Component
     public function mount(): void
     {
         if (auth()->check() && auth()->user()->isStaff()) {
-            abort(403, 'Unauthorized access: Financial Reports & Analytics are restricted to Administrators.');
+            session()->flash('error', 'Unauthorized access: Financial Reports & Analytics are restricted to Administrators.');
+            $this->redirect(route('invoices.create'), navigate: true);
+            return;
         }
 
         $this->applyPeriodDates();

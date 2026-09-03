@@ -429,7 +429,7 @@
                             </label>
                             <div class="w-full text-xs rounded-xl border border-zinc-200 bg-zinc-50/70 px-3 py-2 text-zinc-900 flex items-center justify-between">
                                 <span class="text-[10px] text-zinc-400 font-semibold">TZS</span>
-                                <span class="font-bold {{ $tax_type === 'exclusive' ? 'text-zinc-400' : 'text-zinc-900' }}">{{ number_format($tax_amount_tzs) }}</span>
+                                <span class="font-bold {{ $tax_type === 'exclusive' ? 'text-zinc-400' : 'text-zinc-900' }}">{{ number_format((float) ($tax_amount_tzs ?? 0)) }}</span>
                             </div>
                         </div>
 
@@ -438,7 +438,7 @@
                             <label class="block text-[11px] font-semibold text-zinc-700 mb-1">Final Total *</label>
                             <div class="w-full text-xs rounded-xl border border-[#0a192f] bg-[#0a192f] px-3 py-2 text-white flex items-center justify-between font-bold shadow-xs transition-all duration-300">
                                 <span class="text-[10px] text-blue-400">TZS</span>
-                                <span class="text-xs font-bold transition-all duration-200">{{ number_format($total_amount_tzs) }}</span>
+                                <span class="text-xs font-bold transition-all duration-200">{{ number_format((float) ($total_amount_tzs ?? 0)) }}</span>
                             </div>
                         </div>
                     </div>
@@ -696,16 +696,16 @@
                         <div class="space-y-1.5 text-right">
                             <div class="flex justify-between text-zinc-500">
                                 <span>Subtotal</span>
-                                <span class="font-mono text-zinc-800">TZS {{ number_format($subtotal_tzs) }}</span>
+                                <span class="font-mono text-zinc-800">TZS {{ number_format((float) ($subtotal_tzs ?? 0)) }}</span>
                             </div>
                             <div class="flex justify-between text-zinc-500">
                                 <span>Discount</span>
-                                <span class="font-mono text-zinc-800">-TZS {{ number_format($discount_tzs) }}</span>
+                                <span class="font-mono text-zinc-800">-TZS {{ number_format((float) ($discount_tzs ?? 0)) }}</span>
                             </div>
                             <div class="flex justify-between text-zinc-500">
                                 @if($tax_type === 'inclusive')
-                                    <span>TAX ({{ $tax_rate }}%)</span>
-                                    <span class="font-mono text-zinc-800">+TZS {{ number_format($tax_amount_tzs) }}</span>
+                                    <span>TAX ({{ (float) ($tax_rate ?? 0) }}%)</span>
+                                    <span class="font-mono text-zinc-800">+TZS {{ number_format((float) ($tax_amount_tzs ?? 0)) }}</span>
                                 @else
                                     <span class="font-bold text-amber-900">TAX Exclusive (0%)</span>
                                     <span class="font-bold text-zinc-600">TZS 0</span>
@@ -713,7 +713,7 @@
                             </div>
                             <div class="flex justify-between text-zinc-950 font-bold pt-1.5 border-t border-zinc-200 text-xs">
                                 <span>Total</span>
-                                <span class="font-mono text-zinc-950">TZS {{ number_format($total_amount_tzs) }}</span>
+                                <span class="font-mono text-zinc-950">TZS {{ number_format((float) ($total_amount_tzs ?? 0)) }}</span>
                             </div>
                         </div>
                     </div>

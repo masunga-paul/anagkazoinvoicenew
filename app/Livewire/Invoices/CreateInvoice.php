@@ -293,35 +293,39 @@ class CreateInvoice extends Component
     public function recalculateTotals(): void
     {
         $subtotal = 0.0;
-        foreach ($this->items as $idx => $item) {
-            $qty = (float) ($item['quantity'] ?? 0);
-            $price = (float) ($item['unit_price'] ?? 0);
-            $lineAmount = round($qty * $price, 2);
-            $this->items[$idx]['amount'] = $lineAmount;
-            $subtotal += $lineAmount;
+        if (is_array($this->items)) {
+            foreach ($this->items as $idx => $item) {
+                $qty = is_numeric($item['quantity'] ?? null) ? max(0, (float) $item['quantity']) : 0.0;
+                $price = is_numeric($item['unit_price'] ?? null) ? max(0, (float) $item['unit_price']) : 0.0;
+                $lineAmount = round($qty * $price, 2);
+                $this->items[$idx]['amount'] = $lineAmount;
+                $subtotal += $lineAmount;
+            }
         }
 
-        $this->subtotal_tzs = $subtotal;
-        $discount = max(0, (float) $this->discount_tzs);
+        $this->subtotal_tzs = (float) $subtotal;
+        $discount = is_numeric($this->discount_tzs) ? max(0, (float) $this->discount_tzs) : 0.0;
         $discounted = max(0, $this->subtotal_tzs - $discount);
 
         if ($this->tax_type === 'exclusive') {
             // TAX Exclusive: 0% TAX applied by default (cannot be changed)
             $this->tax_rate = 0.0;
             $this->tax_amount_tzs = 0.0;
-            $this->total_amount_tzs = $discounted;
+            $this->total_amount_tzs = (float) $discounted;
         } else {
             // TAX Inclusive: user can specify TAX e.g. 18%
-            $rate = max(0, (float) $this->tax_rate);
-            $this->tax_amount_tzs = $rate > 0 ? round($discounted * ($rate / 100), 2) : 0.0;
-            $this->total_amount_tzs = round($discounted + $this->tax_amount_tzs, 2);
+            $rate = is_numeric($this->tax_rate) ? max(0, (float) $this->tax_rate) : 0.0;
+            $this->tax_amount_tzs = $rate > 0 ? (float) round($discounted * ($rate / 100), 2) : 0.0;
+            $this->total_amount_tzs = (float) round($discounted + $this->tax_amount_tzs, 2);
         }
     }
 
     public function addPaymentMethodQuickly(): void
     {
         if (auth()->user()?->isStaff()) {
-            abort(403, 'Unauthorized: Staff members cannot add payment methods. Please contact the administrator.');
+            session()->flash('error', 'Unauthorized: Staff members cannot add payment methods. Please contact the administrator.');
+            $this->showAddPaymentModal = false;
+            return;
         }
 
         $this->validate([
@@ -384,13 +388,13 @@ class CreateInvoice extends Component
             'due_date' => $this->due_date,
             'payment_terms' => $this->payment_terms,
             'status' => $targetStatus,
-            'subtotal_tzs' => $this->subtotal_tzs,
-            'discount_tzs' => $this->discount_tzs,
-            'tax_rate_percent' => $this->tax_type === 'exclusive' ? 0.0 : (float) $this->tax_rate,
+            'subtotal_tzs' => (float) $this->subtotal_tzs,
+            'discount_tzs' => is_numeric($this->discount_tzs) ? (float) $this->discount_tzs : 0.0,
+            'tax_rate_percent' => $this->tax_type === 'exclusive' ? 0.0 : (is_numeric($this->tax_rate) ? (float) $this->tax_rate : 0.0),
             'tax_type' => $this->tax_type,
-            'tax_amount_tzs' => $this->tax_amount_tzs,
-            'total_amount_tzs' => $this->total_amount_tzs,
-            'amount_paid_tzs' => $targetStatus === 'paid' ? $this->total_amount_tzs : 0,
+            'tax_amount_tzs' => (float) $this->tax_amount_tzs,
+            'total_amount_tzs' => (float) $this->total_amount_tzs,
+            'amount_paid_tzs' => $targetStatus === 'paid' ? (float) $this->total_amount_tzs : 0.0,
             'selected_payment_method_ids' => array_values(array_map('intval', (array) $this->selected_payment_method_ids)),
             'notes' => $this->notes,
         ]);

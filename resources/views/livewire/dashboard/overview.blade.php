@@ -133,7 +133,7 @@
                         <x-lucide name="file-text" class="w-4 h-4" />
                     </div>
                 </div>
-                <div class="text-2xl font-black text-[#0a192f] font-mono tracking-tight">TZS {{ number_format($totalIssuedAmount) }}</div>
+                <div class="text-2xl font-black text-[#0a192f] font-mono tracking-tight">TZS {{ number_format((float) ($totalIssuedAmount ?? 0)) }}</div>
                 <div class="text-[11px] text-zinc-400 mt-1 flex items-center justify-between">
                     <span>{{ $totalInvoicesCount }} Invoices Generated</span>
                     <a href="{{ route('customers.index') }}" wire:navigate class="text-emerald-600 font-semibold hover:underline flex items-center gap-0.5">
@@ -150,7 +150,7 @@
                         <x-lucide name="check-circle-2" class="w-4 h-4" />
                     </div>
                 </div>
-                <div class="text-2xl font-black text-emerald-700 font-mono tracking-tight">TZS {{ number_format($totalPaidAmount) }}</div>
+                <div class="text-2xl font-black text-emerald-700 font-mono tracking-tight">TZS {{ number_format((float) ($totalPaidAmount ?? 0)) }}</div>
                 <div class="text-[11px] text-emerald-600 mt-1 flex items-center justify-between">
                     <span>Bank & Lipa Namba Receipts</span>
                     <span class="font-bold">{{ $paidCount }} cleared</span>
@@ -165,7 +165,7 @@
                         <x-lucide name="clock" class="w-4 h-4" />
                     </div>
                 </div>
-                <div class="text-2xl font-black text-blue-800 font-mono tracking-tight">TZS {{ number_format($totalPendingAmount) }}</div>
+                <div class="text-2xl font-black text-blue-800 font-mono tracking-tight">TZS {{ number_format((float) ($totalPendingAmount ?? 0)) }}</div>
                 <div class="text-[11px] text-blue-700 mt-1 flex items-center justify-between">
                     <span>Active garage trade credit</span>
                     <span class="font-bold">{{ $pendingCount }} pending</span>
@@ -180,7 +180,7 @@
                         <x-lucide name="alert-triangle" class="w-4 h-4" />
                     </div>
                 </div>
-                <div class="text-2xl font-black text-rose-700 font-mono tracking-tight">TZS {{ number_format($totalOverdueAmount) }}</div>
+                <div class="text-2xl font-black text-rose-700 font-mono tracking-tight">TZS {{ number_format((float) ($totalOverdueAmount ?? 0)) }}</div>
                 <div class="text-[11px] text-rose-600 mt-1 flex items-center justify-between">
                     <span>Past invoice due date</span>
                     <span class="font-bold">{{ $overdueCount }} overdue</span>
@@ -290,7 +290,7 @@
                             <div class="pt-3 border-t border-zinc-100 flex items-center justify-between">
                                 <div>
                                     <span class="text-[10px] text-zinc-400 uppercase block">Unit Price (TZS)</span>
-                                    <span class="font-bold text-sm font-mono text-zinc-950">{{ number_format($product->unit_price_tzs) }}</span>
+                                    <span class="font-bold text-sm font-mono text-zinc-950">{{ number_format((float) ($product->unit_price_tzs ?? 0)) }}</span>
                                 </div>
 
                                 <div class="flex items-center gap-1.5">
@@ -372,7 +372,7 @@
                                     {{ $inv->issue_date ? $inv->issue_date->format('d M Y') : '-' }}
                                 </td>
                                 <td class="px-6 py-3.5 text-right font-mono font-bold text-zinc-950">
-                                    {{ number_format($inv->total_amount_tzs) }}
+                                    {{ number_format((float) ($inv->total_amount_tzs ?? 0)) }}
                                 </td>
                                 <td class="px-6 py-3.5 text-center">
                                     @php

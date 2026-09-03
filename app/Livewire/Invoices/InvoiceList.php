@@ -21,7 +21,9 @@ class InvoiceList extends Component
     public function mount(): void
     {
         if (auth()->user()?->isStaff()) {
-            abort(403, 'Unauthorized access: Invoice Records are restricted to Administrators.');
+            session()->flash('error', 'Access to invoice ledger is restricted to Administrators.');
+            $this->redirect(route('invoices.create'), navigate: true);
+            return;
         }
     }
 
@@ -76,7 +78,9 @@ class InvoiceList extends Component
     public function deleteInvoice(?int $invoiceId = null): void
     {
         if (auth()->user()?->isStaff()) {
-            abort(403, 'Unauthorized action: Staff cannot delete invoices.');
+            session()->flash('error', 'Unauthorized action: Staff cannot delete invoices.');
+            $this->showDeleteModal = false;
+            return;
         }
 
         $targetId = $invoiceId ?? $this->deletingInvoiceId;

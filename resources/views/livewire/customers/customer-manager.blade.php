@@ -346,17 +346,17 @@
 
                                 {{-- Lifetime Billed --}}
                                 <td class="py-3.5 px-4 text-right font-mono font-semibold text-zinc-900">
-                                    TZS {{ number_format($customer->computed_spent) }}
+                                    TZS {{ number_format((float) ($customer->computed_spent ?? 0)) }}
                                     <div class="text-[10px] text-emerald-600 font-sans font-medium">
-                                        Paid: TZS {{ number_format($customer->computed_paid) }}
+                                        Paid: TZS {{ number_format((float) ($customer->computed_paid ?? 0)) }}
                                     </div>
                                 </td>
 
                                 {{-- Outstanding Balance --}}
                                 <td class="py-3.5 px-4 text-right">
-                                    @if($customer->computed_balance > 0)
+                                    @if(($customer->computed_balance ?? 0) > 0)
                                         <span class="font-mono font-bold text-rose-600 block">
-                                            TZS {{ number_format($customer->computed_balance) }}
+                                            TZS {{ number_format((float) ($customer->computed_balance ?? 0)) }}
                                         </span>
                                         <span class="text-[10px] text-rose-500 font-semibold">Unsettled</span>
                                     @else

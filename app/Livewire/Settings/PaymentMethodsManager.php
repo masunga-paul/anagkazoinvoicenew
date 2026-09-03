@@ -36,7 +36,9 @@ class PaymentMethodsManager extends Component
     public function mount(): void
     {
         if (auth()->check() && auth()->user()->isStaff()) {
-            abort(403, 'Unauthorized access: Payment Channel Settings are restricted to Administrators.');
+            session()->flash('error', 'Unauthorized access: Payment Channel Settings are restricted to Administrators.');
+            $this->redirect(route('invoices.create'), navigate: true);
+            return;
         }
     }
 

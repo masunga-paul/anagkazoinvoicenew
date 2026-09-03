@@ -159,7 +159,9 @@ class ProductManager extends Component
     public function saveProduct(): void
     {
         if (auth()->user()?->isStaff()) {
-            abort(403, 'Unauthorized action: Staff cannot modify products.');
+            session()->flash('error', 'Unauthorized action: Staff cannot modify products.');
+            $this->showProductModal = false;
+            return;
         }
 
         $this->validate();
@@ -220,7 +222,9 @@ class ProductManager extends Component
     public function deleteProduct(?int $id = null): void
     {
         if (auth()->user()?->isStaff()) {
-            abort(403, 'Unauthorized action: Staff cannot delete products.');
+            session()->flash('error', 'Unauthorized action: Staff cannot delete products.');
+            $this->showDeleteModal = false;
+            return;
         }
 
         $targetId = $id ?? $this->deletingProductId;
@@ -283,7 +287,9 @@ class ProductManager extends Component
     public function applyStockIntake(): void
     {
         if (auth()->user()?->isStaff()) {
-            abort(403, 'Unauthorized action: Staff cannot perform stock intake.');
+            session()->flash('error', 'Unauthorized action: Staff cannot perform stock intake.');
+            $this->closeAdjustModal();
+            return;
         }
 
         if (! $this->adjustingProductId) {
@@ -304,7 +310,9 @@ class ProductManager extends Component
     public function applyStockAdjustment(string $type = 'add'): void
     {
         if (auth()->user()?->isStaff()) {
-            abort(403, 'Unauthorized action: Staff cannot perform stock adjustments.');
+            session()->flash('error', 'Unauthorized action: Staff cannot perform stock adjustments.');
+            $this->closeAdjustModal();
+            return;
         }
 
         if (! $this->adjustingProductId) {

@@ -278,7 +278,7 @@
                             <div class="pt-2 border-t border-zinc-100 flex items-center justify-between">
                                 <div>
                                     <span class="text-[10px] text-zinc-400 uppercase font-semibold block">Selling Price</span>
-                                    <span class="text-base font-black text-zinc-950">TZS {{ number_format($product->unit_price_tzs) }}</span>
+                                    <span class="text-base font-black text-zinc-950">TZS {{ number_format((float) ($product->unit_price_tzs ?? 0)) }}</span>
                                 </div>
 
                                 @if(auth()->user()?->isAdmin())
@@ -361,15 +361,15 @@
                                         {{ str_replace('_', ' ', $product->category) }}
                                     </td>
                                     <td class="px-6 py-4 text-right font-bold text-zinc-900">
-                                        TZS {{ number_format($product->unit_price_tzs) }}
+                                        TZS {{ number_format((float) ($product->unit_price_tzs ?? 0)) }}
                                     </td>
                                     <td class="px-6 py-4 text-center">
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold {{ $product->stock_quantity <= $product->reorder_threshold ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200' }}">
-                                            {{ $product->stock_quantity }} pcs
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold {{ ($product->stock_quantity ?? 0) <= ($product->reorder_threshold ?? 10) ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200' }}">
+                                            {{ $product->stock_quantity ?? 0 }} pcs
                                         </span>
                                     </td>
                                     <td class="px-6 py-4 text-right font-bold text-[#0a192f]">
-                                        TZS {{ number_format($product->stock_quantity * $product->unit_price_tzs) }}
+                                        TZS {{ number_format((float) (($product->stock_quantity ?? 0) * ($product->unit_price_tzs ?? 0))) }}
                                     </td>
                                     <td class="px-6 py-4 text-right space-x-1">
                                         @if(auth()->user()?->isAdmin())

@@ -237,10 +237,10 @@
                                     @endif
                                 </td>
                                 <td class="px-6 py-4 text-right font-mono font-bold text-zinc-950">
-                                    {{ number_format($inv->total_amount_tzs) }}
+                                    {{ number_format((float) ($inv->total_amount_tzs ?? 0)) }}
                                 </td>
-                                <td class="px-6 py-4 text-right font-mono font-semibold {{ $inv->balance_tzs > 0 ? 'text-rose-600' : 'text-emerald-600' }}">
-                                    {{ number_format($inv->balance_tzs) }}
+                                <td class="px-6 py-4 text-right font-mono font-semibold {{ ($inv->balance_tzs ?? 0) > 0 ? 'text-rose-600' : 'text-emerald-600' }}">
+                                    {{ number_format((float) ($inv->balance_tzs ?? 0)) }}
                                 </td>
                                 <td class="px-6 py-4 text-center">
                                     @php
