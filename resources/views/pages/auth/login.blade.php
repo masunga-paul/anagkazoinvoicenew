@@ -40,4 +40,19 @@
             </div>
         </form>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            document.addEventListener('click', function (e) {
+                const eyeBtn = e.target.closest('button[data-flux-input-viewable], [data-flux-input-viewable], button[aria-label*="password" i]');
+                if (eyeBtn) {
+                    const parent = eyeBtn.closest('.relative, div') || eyeBtn.parentElement;
+                    const pwdInput = parent ? parent.querySelector('input[name="password"]') : document.querySelector('input[name="password"]');
+                    if (pwdInput) {
+                        pwdInput.type = pwdInput.type === 'password' ? 'text' : 'password';
+                    }
+                }
+            });
+        });
+    </script>
 </x-layouts::auth>
