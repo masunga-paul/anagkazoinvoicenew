@@ -1,5 +1,22 @@
 # ==========================================
-# STAGE 1: Frontend Asset Compilation (Vite)
+# STAGE 1: Composer Dependencies
+# ==========================================
+FROM composer:2 AS vendor
+
+WORKDIR /app
+
+COPY composer.json composer.lock ./
+
+RUN composer install \
+    --no-dev \
+    --no-interaction \
+    --prefer-dist \
+    --ignore-platform-reqs \
+    --optimize-autoloader \
+    --no-scripts
+
+# ==========================================
+# STAGE 2: Frontend Asset Compilation (Vite)
 # ==========================================
 FROM node:20-alpine AS frontend
 
@@ -8,11 +25,14 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 
+# Copy full application code including vendor directory with Livewire Flux CSS
 COPY . .
+COPY --from=vendor /app/vendor ./vendor
+
 RUN npm run build
 
 # ==========================================
-# STAGE 2: PHP 8.2 + Nginx Production Runtime
+# STAGE 3: PHP 8.2 + Nginx Production Runtime
 # ==========================================
 FROM php:8.2-fpm-alpine AS backend
 
@@ -70,11 +90,14 @@ RUN chmod +x /usr/local/bin/entrypoint.sh
 # Copy application source code
 COPY . .
 
+# Copy vendor packages from composer stage
+COPY --from=vendor /app/vendor /var/www/html/vendor
+
 # Copy compiled frontend assets from Node stage
 COPY --from=frontend /app/public/build /var/www/html/public/build
 
-# Install production PHP dependencies
-RUN composer install --no-dev --optimize-autoloader --no-interaction --no-progress
+# Finish composer autoloader dump and package discovery
+RUN composer dump-autoload --optimize --no-dev
 
 # Set directory permissions
 RUN chown -R www-data:www-data /var/www/html \
