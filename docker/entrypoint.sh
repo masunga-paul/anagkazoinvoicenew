@@ -45,13 +45,26 @@ fi
 # Clear old configuration cache before migrating
 php artisan config:clear || true
 
-# Run database migrations
+# If MySQL is configured, wait up to 20 seconds for connection readiness
+if [ "${DB_CONNECTION}" = "mysql" ]; then
+    echo "==> Verifying MySQL database connection readiness..."
+    for i in $(seq 1 10); do
+        if php artisan db:show > /dev/null 2>&1; then
+            echo "==> Database is reachable!"
+            break
+        fi
+        echo "==> Waiting for database to accept connections ($i/10)..."
+        sleep 2
+    done
+fi
+
+# Run database migrations with resilience
 echo "==> Running database migrations..."
-php artisan migrate --force
+php artisan migrate --force || echo "==> [Warning] Migration exited with error, continuing container boot..."
 
 # Seed database if essential admin account does not exist
 echo "==> Running database seeder for initial roles and credentials..."
-php artisan db:seed --force || true
+php artisan db:seed --force || echo "==> [Warning] Seeder exited with error, continuing container boot..."
 
 # Create storage symbolic link
 php artisan storage:link --force || true
