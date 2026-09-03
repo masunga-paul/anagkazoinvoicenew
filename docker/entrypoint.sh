@@ -79,14 +79,18 @@ fi
 
 # Configure Nginx port dynamically if PORT is provided by Railway
 TARGET_PORT="${PORT:-80}"
-echo "==> Configuring Nginx to listen on port ${TARGET_PORT}..."
-sed -i "s/listen [0-9]\+;/listen ${TARGET_PORT};/g" /etc/nginx/http.d/default.conf
-sed -i "s/listen \[::\]:[0-9]\+;/listen \[::\]:${TARGET_PORT};/g" /etc/nginx/http.d/default.conf
+echo "==> Configuring Nginx (listening on 80, 8080, and ${TARGET_PORT})..."
+if [ "${TARGET_PORT}" != "80" ] && [ "${TARGET_PORT}" != "8080" ]; then
+    sed -i "s/listen 80 default_server;/listen 80 default_server;\n    listen ${TARGET_PORT};\n    listen [::]:${TARGET_PORT};/g" /etc/nginx/http.d/default.conf
+fi
+
+# Test Nginx configuration
+nginx -t
 
 # Start PHP-FPM daemon
 echo "==> Starting PHP-FPM..."
 php-fpm -D
 
 # Start Nginx in foreground
-echo "==> Starting Nginx server on port ${TARGET_PORT}..."
+echo "==> Starting Nginx server..."
 exec nginx -g "daemon off;"
