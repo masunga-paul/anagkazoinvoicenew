@@ -82,20 +82,6 @@ document.addEventListener('livewire:navigated', () => {
     hideLoader();
 });
 
-// Also trigger loader when user clicks navigation links
-document.addEventListener('click', (e) => {
-    const link = e.target.closest('a');
-    if (!link || !link.href) return;
-
-    if (link.target === '_blank' || link.hasAttribute('download') || link.href.startsWith('javascript:') || link.href.startsWith('#')) {
-        return;
-    }
-
-    if (link.href.startsWith(window.location.origin)) {
-        showLoader();
-    }
-});
-
-window.addEventListener('beforeunload', () => {
-    showLoader();
+window.addEventListener('load', () => {
+    hideLoader();
 });
