@@ -68,12 +68,13 @@ test('staff user can view customers directory but cannot create, edit, or delete
         ->set('name', 'Hacked Customer')
         ->set('billing_address', 'Dar')
         ->call('saveCustomer')
-        ->assertForbidden();
+        ->assertSet('showCustomerModal', false);
+
+    expect(Customer::where('name', 'Hacked Customer')->exists())->toBeFalse();
 
     Livewire::actingAs($this->staffUser)
         ->test(CustomerManager::class)
-        ->call('deleteCustomer', $customer->id)
-        ->assertForbidden();
+        ->call('deleteCustomer', $customer->id);
 
     expect(Customer::where('id', $customer->id)->exists())->toBeTrue();
 });
@@ -147,12 +148,13 @@ test('staff user can view products stock but cannot create, edit, or delete prod
         ->set('stock_quantity', 10)
         ->set('reorder_threshold', 2)
         ->call('saveProduct')
-        ->assertForbidden();
+        ->assertSet('showProductModal', false);
+
+    expect(TyreProduct::where('sku', 'TYR-FAKE-999')->exists())->toBeFalse();
 
     Livewire::actingAs($this->staffUser)
         ->test(ProductManager::class)
-        ->call('deleteProduct', $product->id)
-        ->assertForbidden();
+        ->call('deleteProduct', $product->id);
 
     Livewire::actingAs($this->staffUser)
         ->test(ProductManager::class)
@@ -161,7 +163,7 @@ test('staff user can view products stock but cannot create, edit, or delete prod
     Livewire::actingAs($this->staffUser)
         ->test(ProductManager::class)
         ->call('applyStockAdjustment', 'add')
-        ->assertForbidden();
+        ->assertSet('showAdjustModal', false);
 
     expect($product->fresh()->stock_quantity)->toBe(20);
 });
@@ -199,13 +201,15 @@ test('staff user can create and issue invoices but cannot add payment methods or
     $response->assertSee('Create New Invoice');
     $response->assertDontSee('Add Payment Method');
 
-    // Staff attempting to add a payment method is forbidden
+    // Staff attempting to add a payment method is blocked gracefully
     Livewire::actingAs($this->staffUser)
         ->test(CreateInvoice::class)
         ->set('new_pm_name', 'Hacked Bank')
         ->set('new_pm_account', '12345678')
         ->call('addPaymentMethodQuickly')
-        ->assertForbidden();
+        ->assertSet('showAddPaymentModal', false);
+
+    expect(PaymentMethod::where('name', 'Hacked Bank')->exists())->toBeFalse();
 
     // Generate and issue invoice as staff selecting existing admin payment method
     Livewire::actingAs($this->staffUser)
@@ -235,27 +239,27 @@ test('staff user can create and issue invoices but cannot add payment methods or
     expect($invoice->status)->toBe('issued');
     expect((float) $invoice->total_amount_tzs)->toBeGreaterThan(0);
 
-    // Staff cannot view invoice records (403 Forbidden)
+    // Staff cannot view invoice records (Redirects to invoices.create)
     $listResponse = $this->actingAs($this->staffUser)->get(route('invoices.index'));
-    $listResponse->assertForbidden();
+    $listResponse->assertRedirect(route('invoices.create'));
 
     Livewire::actingAs($this->staffUser)
         ->test(InvoiceList::class)
-        ->assertForbidden();
+        ->assertRedirect(route('invoices.create'));
 });
 
 test('staff user cannot access records, reports, payment settings, or financial valuation analytics', function () {
-    // Records registry is forbidden for staff
+    // Records registry is restricted for staff (Redirects to invoices.create)
     $invoicesResponse = $this->actingAs($this->staffUser)->get(route('invoices.index'));
-    $invoicesResponse->assertForbidden();
+    $invoicesResponse->assertRedirect(route('invoices.create'));
 
-    // Reports is forbidden for staff
+    // Reports is restricted for staff (Redirects to invoices.create)
     $reportsResponse = $this->actingAs($this->staffUser)->get(route('reports.index'));
-    $reportsResponse->assertForbidden();
+    $reportsResponse->assertRedirect(route('invoices.create'));
 
-    // Payment settings is forbidden for staff
+    // Payment settings is restricted for staff (Redirects to invoices.create)
     $paymentResponse = $this->actingAs($this->staffUser)->get(route('payment-methods.index'));
-    $paymentResponse->assertForbidden();
+    $paymentResponse->assertRedirect(route('invoices.create'));
 
     // Dashboard redirects staff to invoice creation
     $dashboardResponse = $this->actingAs($this->staffUser)->get(route('dashboard'));

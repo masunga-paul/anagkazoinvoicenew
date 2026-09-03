@@ -35,7 +35,7 @@ test('staff users are forbidden from accessing security credentials', function (
     $this->actingAs($this->staff);
 
     $response = $this->get(route('security-credentials.index'));
-    $response->assertStatus(403);
+    $response->assertRedirect(route('invoices.create'));
 });
 
 test('admin can view security credentials page and see both admin and staff details', function () {
