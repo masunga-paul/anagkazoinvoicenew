@@ -15,26 +15,12 @@ class KariakooTyreSeeder extends Seeder
 {
     public function run(): void
     {
-        // 0. Seed Admin & Staff Users
-        User::updateOrCreate(
-            ['email' => 'admin@anagkazo.co.tz'],
-            [
-                'name' => 'Admin',
-                'role' => 'admin',
-                'password' => Hash::make('superuser@2026'),
-            ]
-        );
+        // If operational product inventory already exists, DO NOT override it!
+        if (TyreProduct::count() > 0) {
+            return;
+        }
 
-        User::updateOrCreate(
-            ['email' => 'staff@anagkazo.co.tz'],
-            [
-                'name' => 'Staff',
-                'role' => 'staff',
-                'password' => Hash::make('staffwaanagkazo@2026'),
-            ]
-        );
-
-        // 1. Seed Kariakoo Tyre Products
+        // 1. Seed Initial Kariakoo Tyre Products (Blank Database Only)
         $products = [
             [
                 'sku' => 'TYR-TRI-31580225',
@@ -111,7 +97,7 @@ class KariakooTyreSeeder extends Seeder
         ];
 
         foreach ($products as $p) {
-            TyreProduct::updateOrCreate(['sku' => $p['sku']], $p);
+            TyreProduct::firstOrCreate(['sku' => $p['sku']], $p);
         }
 
         // 2. Seed Kariakoo Customers
@@ -169,7 +155,7 @@ class KariakooTyreSeeder extends Seeder
         ];
 
         foreach ($customers as $c) {
-            Customer::updateOrCreate(['name' => $c['name']], $c);
+            Customer::firstOrCreate(['name' => $c['name']], $c);
         }
 
         // 3. Seed Existing Invoices
@@ -179,7 +165,7 @@ class KariakooTyreSeeder extends Seeder
         $p2 = TyreProduct::where('sku', 'TYR-BRI-2656517')->first();
 
         if ($c1 && $p1 && $p2) {
-            $inv1 = Invoice::updateOrCreate(
+            $inv1 = Invoice::firstOrCreate(
                 ['invoice_number' => 'INV-DSM-2026-0001'],
                 [
                     'customer_id' => $c1->id,
@@ -224,7 +210,7 @@ class KariakooTyreSeeder extends Seeder
         }
 
         if ($c2 && $p1) {
-            $inv2 = Invoice::updateOrCreate(
+            $inv2 = Invoice::firstOrCreate(
                 ['invoice_number' => 'INV-DSM-2026-0002'],
                 [
                     'customer_id' => $c2->id,
@@ -263,7 +249,7 @@ class KariakooTyreSeeder extends Seeder
         $p3 = TyreProduct::where('sku', 'TYR-MAX-2055516')->first() ?: $p2;
 
         if ($c3 && $p1) {
-            $inv3 = Invoice::updateOrCreate(
+            $inv3 = Invoice::firstOrCreate(
                 ['invoice_number' => 'INV-DSM-2026-0003'],
                 [
                     'customer_id' => $c3->id,
@@ -298,7 +284,7 @@ class KariakooTyreSeeder extends Seeder
         }
 
         if ($c4 && $p2) {
-            $inv4 = Invoice::updateOrCreate(
+            $inv4 = Invoice::firstOrCreate(
                 ['invoice_number' => 'INV-DSM-2026-0004'],
                 [
                     'customer_id' => $c4->id,
@@ -334,7 +320,7 @@ class KariakooTyreSeeder extends Seeder
 
         $c5 = Customer::where('name', 'like', '%Tanzania Ports Authority%')->first();
         if ($c5 && $p1) {
-            $inv5 = Invoice::updateOrCreate(
+            $inv5 = Invoice::firstOrCreate(
                 ['invoice_number' => 'INV-DSM-2026-0005'],
                 [
                     'customer_id' => $c5->id,
@@ -421,7 +407,7 @@ class KariakooTyreSeeder extends Seeder
         ];
 
         foreach ($paymentMethods as $pm) {
-            PaymentMethod::updateOrCreate(
+            PaymentMethod::firstOrCreate(
                 ['account_number_or_till' => $pm['account_number_or_till']],
                 $pm
             );

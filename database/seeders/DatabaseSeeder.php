@@ -15,26 +15,33 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Admin Account
-        User::updateOrCreate(
-            ['email' => 'admin@anagkazo.co.tz'],
-            [
-                'name' => 'Admin',
-                'role' => 'admin',
-                'password' => \Illuminate\Support\Facades\Hash::make('superuser@2026'),
-            ]
-        );
+        // Admin Account (only if no admin exists)
+        if (User::where('role', 'admin')->doesntExist()) {
+            User::firstOrCreate(
+                ['email' => 'admin@anagkazo.co.tz'],
+                [
+                    'name' => 'Admin',
+                    'role' => 'admin',
+                    'password' => \Illuminate\Support\Facades\Hash::make('superuser@2026'),
+                ]
+            );
+        }
 
-        // Staff Account
-        User::updateOrCreate(
-            ['email' => 'staff@anagkazo.co.tz'],
-            [
-                'name' => 'Staff',
-                'role' => 'staff',
-                'password' => \Illuminate\Support\Facades\Hash::make('staffwaanagkazo@2026'),
-            ]
-        );
+        // Staff Account (only if no staff exists)
+        if (User::where('role', 'staff')->doesntExist()) {
+            User::firstOrCreate(
+                ['email' => 'staff@anagkazo.co.tz'],
+                [
+                    'name' => 'Staff',
+                    'role' => 'staff',
+                    'password' => \Illuminate\Support\Facades\Hash::make('staffwaanagkazo@2026'),
+                ]
+            );
+        }
 
-        $this->call(KariakooTyreSeeder::class);
+        // Only seed sample products, customers, and invoices if products table is empty
+        if (\App\Models\TyreProduct::count() === 0) {
+            $this->call(KariakooTyreSeeder::class);
+        }
     }
 }
