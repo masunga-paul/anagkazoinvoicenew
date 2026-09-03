@@ -36,6 +36,12 @@ fi
 
 echo "==> Database Mode: Connection=${DB_CONNECTION:-sqlite}, Host=${DB_HOST:-none}, Database=${DB_DATABASE:-none}"
 
+# If a volume was mounted over /var/www/html/database, restore migrations and seeders
+if [ ! -d "/var/www/html/database/migrations" ] && [ -d "/var/www/html/database_src/migrations" ]; then
+    echo "==> Restoring migration and seeder definitions to mounted database volume..."
+    cp -rn /var/www/html/database_src/* /var/www/html/database/ || true
+fi
+
 # If SQLite is used, ensure database file and containing directory have full write permissions
 if [ "${DB_CONNECTION}" = "sqlite" ] || [ -z "${DB_CONNECTION}" ]; then
     DB_PATH="${DB_DATABASE:-/var/www/html/database/database.sqlite}"

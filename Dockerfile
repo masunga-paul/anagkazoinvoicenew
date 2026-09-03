@@ -99,6 +99,9 @@ COPY --from=frontend /app/public/build /var/www/html/public/build
 # Finish composer autoloader dump and package discovery
 RUN composer dump-autoload --optimize --no-dev --ignore-platform-reqs
 
+# Preserve migration and seeder templates for persistent volumes
+RUN cp -r /var/www/html/database /var/www/html/database_src
+
 # Set directory permissions
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
