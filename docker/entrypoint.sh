@@ -8,6 +8,28 @@ mkdir -p /var/www/html/storage/framework/{sessions,views,cache} /var/www/html/st
 chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/database
 chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/database
 
+# Fallback to native Railway MySQL environment variables if DB_HOST or DB_DATABASE is blank
+if [ -z "${DB_HOST}" ] && [ -n "${MYSQLHOST}" ]; then
+    export DB_HOST="${MYSQLHOST}"
+fi
+if [ -z "${DB_PORT}" ] && [ -n "${MYSQLPORT}" ]; then
+    export DB_PORT="${MYSQLPORT}"
+fi
+if [ -z "${DB_DATABASE}" ] && [ -n "${MYSQLDATABASE}" ]; then
+    export DB_DATABASE="${MYSQLDATABASE}"
+fi
+if [ -z "${DB_USERNAME}" ] && [ -n "${MYSQLUSER}" ]; then
+    export DB_USERNAME="${MYSQLUSER}"
+fi
+if [ -z "${DB_PASSWORD}" ] && [ -n "${MYSQLPASSWORD}" ]; then
+    export DB_PASSWORD="${MYSQLPASSWORD}"
+fi
+if [ -z "${DB_URL}" ] && [ -n "${MYSQL_URL}" ]; then
+    export DB_URL="${MYSQL_URL}"
+fi
+
+echo "==> Database Mode: Connection=${DB_CONNECTION:-sqlite}, Host=${DB_HOST:-none}, Database=${DB_DATABASE:-none}"
+
 # If SQLite is used, ensure database file exists with correct permissions
 if [ "${DB_CONNECTION}" = "sqlite" ] || [ -z "${DB_CONNECTION}" ]; then
     DB_PATH="${DB_DATABASE:-/var/www/html/database/database.sqlite}"
