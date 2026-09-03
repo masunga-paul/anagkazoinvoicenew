@@ -3,37 +3,36 @@ set -e
 
 echo "==> Starting Anagkazo Autoparts ERP Production Container..."
 
-# If SQLite is used and database path doesn't exist, create it
+# Ensure storage directories exist and have proper permissions
+mkdir -p /var/www/html/storage/framework/{sessions,views,cache} /var/www/html/storage/logs /var/www/html/bootstrap/cache /var/www/html/database
+chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/database
+chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/database
+
+# If SQLite is used, ensure database file exists with correct permissions
 if [ "${DB_CONNECTION}" = "sqlite" ] || [ -z "${DB_CONNECTION}" ]; then
     DB_PATH="${DB_DATABASE:-/var/www/html/database/database.sqlite}"
     mkdir -p "$(dirname "$DB_PATH")"
     if [ ! -f "$DB_PATH" ]; then
-        echo "==> Initializing SQLite database at $DB_PATH..."
+        echo "==> Initializing SQLite database file at $DB_PATH..."
         touch "$DB_PATH"
-        chmod 664 "$DB_PATH"
-        chown www-data:www-data "$DB_PATH"
     fi
+    chmod 664 "$DB_PATH"
+    chown www-data:www-data "$DB_PATH"
 fi
 
-# Ensure storage directories exist and have proper permissions
-mkdir -p /var/www/html/storage/framework/{sessions,views,cache} /var/www/html/storage/logs
-chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
-chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
-
-# Create storage symbolic link
-php artisan storage:link --force || true
+# Clear old configuration cache before migrating
+php artisan config:clear || true
 
 # Run database migrations
 echo "==> Running database migrations..."
-php artisan migrate --force --isolated || true
+php artisan migrate --force
 
-# Seed database if users table is empty
-echo "==> Checking if initial database seeding is required..."
-USER_COUNT=$(php artisan tinker --execute="echo \App\Models\User::count();" 2>/dev/null || echo "0")
-if [ "$USER_COUNT" = "0" ] || [ -z "$USER_COUNT" ]; then
-    echo "==> Seeding essential initial credentials and payment methods..."
-    php artisan db:seed --force || true
-fi
+# Seed database if essential admin account does not exist
+echo "==> Running database seeder for initial roles and credentials..."
+php artisan db:seed --force || true
+
+# Create storage symbolic link
+php artisan storage:link --force || true
 
 # Cache configurations, routes, and blade views for high-performance production execution
 if [ "${APP_ENV:-production}" = "production" ]; then
