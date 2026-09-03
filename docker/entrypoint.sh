@@ -28,6 +28,12 @@ if [ -z "${DB_URL}" ] && [ -n "${MYSQL_URL}" ]; then
     export DB_URL="${MYSQL_URL}"
 fi
 
+# Ensure APP_KEY exists
+if [ -z "${APP_KEY}" ]; then
+    echo "==> APP_KEY is not set. Generating application encryption key..."
+    export APP_KEY="$(php artisan key:generate --show)"
+fi
+
 echo "==> Database Mode: Connection=${DB_CONNECTION:-sqlite}, Host=${DB_HOST:-none}, Database=${DB_DATABASE:-none}"
 
 # If SQLite is used, ensure database file exists with correct permissions
