@@ -10,7 +10,7 @@
                     <img src="{{ asset('images/logo.png') }}" alt="Anagkazo Logo" class="h-20 sm:h-24 w-auto object-contain transition duration-200 group-hover:scale-105">
                     <div class="text-center">
                         <span class="font-black text-xl tracking-tight text-zinc-950 dark:text-white block">ANAGKAZO AUTOPARTS</span>
-                        <span class="text-xs font-semibold text-zinc-400 uppercase tracking-widest block">Kariakoo Tyre Billing & ERP</span>
+                        <span class="text-xs font-semibold text-zinc-400 uppercase tracking-widest block"></span>
                     </div>
                     <span class="sr-only">{{ config('app.name', 'Laravel') }}</span>
                 </a>
