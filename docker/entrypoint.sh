@@ -36,15 +36,18 @@ fi
 
 echo "==> Database Mode: Connection=${DB_CONNECTION:-sqlite}, Host=${DB_HOST:-none}, Database=${DB_DATABASE:-none}"
 
-# If SQLite is used, ensure database file exists with correct permissions
+# If SQLite is used, ensure database file and containing directory have full write permissions
 if [ "${DB_CONNECTION}" = "sqlite" ] || [ -z "${DB_CONNECTION}" ]; then
     DB_PATH="${DB_DATABASE:-/var/www/html/database/database.sqlite}"
-    mkdir -p "$(dirname "$DB_PATH")"
+    DB_DIR="$(dirname "$DB_PATH")"
+    mkdir -p "$DB_DIR"
+    chmod 777 "$DB_DIR"
+    chown -R www-data:www-data "$DB_DIR"
     if [ ! -f "$DB_PATH" ]; then
         echo "==> Initializing SQLite database file at $DB_PATH..."
         touch "$DB_PATH"
     fi
-    chmod 664 "$DB_PATH"
+    chmod 666 "$DB_PATH"
     chown www-data:www-data "$DB_PATH"
 fi
 
