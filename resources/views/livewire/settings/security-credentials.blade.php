@@ -79,18 +79,6 @@
             </div>
         </div>
 
-        {{-- Notice Banner --}}
-        <div class="bg-blue-50 border border-blue-200 rounded-2xl p-4 text-xs text-blue-900 flex items-start gap-3">
-            <x-lucide name="shield-check" class="w-5 h-5 text-blue-700 shrink-0 mt-0.5" />
-            <div class="space-y-1">
-                <div><strong class="font-bold">Role-Based Session Invalidation:</strong></div>
-                <div class="text-blue-800">
-                    &bull; <strong>Admin credentials changed:</strong> The Administrator will be immediately logged out and redirected to login.<br>
-                    &bull; <strong>Staff credentials changed:</strong> Only staff members will have their active sessions terminated and be logged out. You (Admin) will remain logged in.
-                </div>
-            </div>
-        </div>
-
         {{-- Success Notification --}}
         @if(session()->has('staff_success'))
             <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold flex items-center gap-3 shadow-xs">
