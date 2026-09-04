@@ -37,9 +37,9 @@ class CreateInvoice extends Component
 
     public array $items = [];
 
-    public int|float|string $discount_tzs = 0;
+    public int|float|string|null $discount_tzs = 0;
 
-    public int|float|string $tax_rate = 18.0; // Flexible VAT % for inclusive
+    public int|float|string|null $tax_rate = 18.0; // Flexible VAT % for inclusive
 
     public string $tax_type = 'inclusive'; // 'inclusive' or 'exclusive'
 
@@ -280,6 +280,16 @@ class CreateInvoice extends Component
 
     public function updated($property = null): void
     {
+        if ($property === 'discount_tzs' && is_string($this->discount_tzs)) {
+            $clean = str_replace([',', ' ', 'TZS', 'tzs'], '', trim($this->discount_tzs));
+            $this->discount_tzs = ($clean === '' || $clean === null) ? 0 : (is_numeric($clean) ? (float) $clean : $clean);
+        }
+
+        if ($property === 'tax_rate' && is_string($this->tax_rate)) {
+            $clean = str_replace(['%', ' '], '', trim($this->tax_rate));
+            $this->tax_rate = ($clean === '' || $clean === null) ? 0 : (is_numeric($clean) ? (float) $clean : $clean);
+        }
+
         $this->recalculateTotals();
 
         if ($property && in_array(explode('.', $property)[0], ['customer_name', 'billing_address', 'issue_date', 'due_date', 'items', 'discount_tzs', 'tax_rate', 'new_pm_name', 'new_pm_account'])) {
@@ -292,9 +302,41 @@ class CreateInvoice extends Component
         $this->recalculateTotals();
     }
 
+    public function updatingDiscountTzs(&$value): void
+    {
+        if (is_string($value)) {
+            $cleaned = str_replace([',', ' ', 'TZS', 'tzs'], '', trim($value));
+            if ($cleaned === '' || $cleaned === null) {
+                $value = 0;
+            } elseif (is_numeric($cleaned)) {
+                $value = (float) $cleaned;
+            }
+        }
+    }
+
     public function updatedDiscountTzs(): void
     {
+        if (is_string($this->discount_tzs)) {
+            $clean = str_replace([',', ' ', 'TZS', 'tzs'], '', trim($this->discount_tzs));
+            if ($clean === '' || $clean === null) {
+                $this->discount_tzs = 0;
+            } elseif (is_numeric($clean)) {
+                $this->discount_tzs = (float) $clean;
+            }
+        }
         $this->recalculateTotals();
+    }
+
+    public function updatingTaxRate(&$value): void
+    {
+        if (is_string($value)) {
+            $cleaned = str_replace(['%', ' '], '', trim($value));
+            if ($cleaned === '' || $cleaned === null) {
+                $value = 0;
+            } elseif (is_numeric($cleaned)) {
+                $value = (float) $cleaned;
+            }
+        }
     }
 
     public function updatedTaxRate(): void
@@ -341,7 +383,10 @@ class CreateInvoice extends Component
         }
 
         $this->subtotal_tzs = (float) $subtotal;
-        $discount = is_numeric($this->discount_tzs) ? max(0, (float) $this->discount_tzs) : 0.0;
+        $rawDiscount = is_string($this->discount_tzs) 
+            ? str_replace([',', ' ', 'TZS', 'tzs'], '', trim($this->discount_tzs)) 
+            : $this->discount_tzs;
+        $discount = is_numeric($rawDiscount) ? max(0, (float) $rawDiscount) : 0.0;
         $discounted = max(0, $this->subtotal_tzs - $discount);
 
         if ($this->tax_type === 'exclusive') {
@@ -351,7 +396,10 @@ class CreateInvoice extends Component
             $this->total_amount_tzs = (float) $discounted;
         } else {
             // TAX Inclusive: user can specify TAX e.g. 18%
-            $rate = is_numeric($this->tax_rate) ? max(0, (float) $this->tax_rate) : 0.0;
+            $rawRate = is_string($this->tax_rate) 
+                ? str_replace(['%', ' '], '', trim($this->tax_rate)) 
+                : $this->tax_rate;
+            $rate = is_numeric($rawRate) ? max(0, (float) $rawRate) : 0.0;
             $this->tax_amount_tzs = $rate > 0 ? (float) round($discounted * ($rate / 100), 2) : 0.0;
             $this->total_amount_tzs = (float) round($discounted + $this->tax_amount_tzs, 2);
         }

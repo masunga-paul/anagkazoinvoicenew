@@ -198,3 +198,55 @@ test('discount cannot exceed subtotal amount', function () {
         ->call('saveInvoice', 'issued')
         ->assertHasErrors(['discount_tzs']);
 });
+
+test('invoice numbers follow INV DSM 001 format and dynamically increment to 002, 003', function () {
+    expect(Invoice::generateKariakooInvoiceNumber())->toBe('INV DSM 001');
+
+    $inv1 = Invoice::create([
+        'invoice_number' => 'INV DSM 001',
+        'customer_id' => $this->customer->id,
+        'customer_name' => $this->customer->name,
+        'billing_address' => $this->customer->billing_address,
+        'issue_date' => now(),
+        'due_date' => now()->addDays(14),
+        'status' => 'issued',
+    ]);
+
+    expect(Invoice::generateKariakooInvoiceNumber())->toBe('INV DSM 002');
+
+    $inv2 = Invoice::create([
+        'invoice_number' => 'INV DSM 002',
+        'customer_id' => $this->customer->id,
+        'customer_name' => $this->customer->name,
+        'billing_address' => $this->customer->billing_address,
+        'issue_date' => now(),
+        'due_date' => now()->addDays(14),
+        'status' => 'issued',
+    ]);
+
+    expect(Invoice::generateKariakooInvoiceNumber())->toBe('INV DSM 003');
+});
+
+test('entering null, empty string, or formatted numbers into discount does not trigger server 500 errors', function () {
+    Livewire::actingAs($this->admin)
+        ->test(CreateInvoice::class)
+        ->set('items', [
+            [
+                'tyre_product_id' => $this->product->id,
+                'item_description' => 'Triangle 315/80R22.5',
+                'quantity' => 1,
+                'unit_label' => 'tyres',
+                'unit_price' => 500000,
+                'amount' => 500000,
+            ],
+        ])
+        ->set('discount_tzs', null)
+        ->assertHasNoErrors()
+        ->set('discount_tzs', '')
+        ->assertHasNoErrors()
+        ->set('discount_tzs', '50,000')
+        ->assertHasNoErrors()
+        ->set('discount_tzs', 50000)
+        ->assertHasNoErrors()
+        ->assertSee('-TZS 50,000');
+});

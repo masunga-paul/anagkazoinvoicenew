@@ -70,10 +70,26 @@ class Invoice extends Model
 
     public static function generateKariakooInvoiceNumber(): string
     {
-        $year = now()->format('Y');
-        $count = static::whereYear('created_at', now()->year)->count() + 1;
+        $latest = static::orderByDesc('id')->first();
+        $nextNumber = 1;
 
-        return 'INV-DSM-'.$year.'-'.str_pad((string) $count, 4, '0', STR_PAD_LEFT);
+        if ($latest) {
+            if (preg_match('/(?:INV\s*DSM|INV-DSM)(?:\s*|-|\/)?(?:\d{4}-)?(\d+)/i', $latest->invoice_number, $matches)) {
+                $nextNumber = ((int) $matches[1]) + 1;
+            } else {
+                $nextNumber = static::count() + 1;
+            }
+        }
+
+        do {
+            $candidate = 'INV DSM ' . str_pad((string) $nextNumber, 3, '0', STR_PAD_LEFT);
+            if (! static::where('invoice_number', $candidate)->exists()) {
+                return $candidate;
+            }
+            $nextNumber++;
+        } while ($nextNumber < 1000000);
+
+        return $candidate;
     }
 
     public function getPaymentStatusAttribute(): string

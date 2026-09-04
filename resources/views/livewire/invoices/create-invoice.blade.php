@@ -756,7 +756,7 @@
                             </div>
                             <div class="flex justify-between text-zinc-500">
                                 <span>Discount</span>
-                                <span class="font-mono text-zinc-800">-TZS {{ number_format((float) ($discount_tzs ?? 0)) }}</span>
+                                <span class="font-mono text-zinc-800">-TZS {{ number_format(is_numeric($discount_tzs) ? (float) $discount_tzs : 0) }}</span>
                             </div>
                             <div class="flex justify-between text-zinc-500">
                                 @if($tax_type === 'inclusive')
