@@ -39,9 +39,27 @@ class DatabaseSeeder extends Seeder
             );
         }
 
-        // Only seed sample products, customers, and invoices if products table is empty
-        if (\App\Models\TyreProduct::count() === 0) {
-            $this->call(KariakooTyreSeeder::class);
+        // Default payment methods if none configured
+        if (\App\Models\PaymentMethod::count() === 0) {
+            \App\Models\PaymentMethod::firstOrCreate(
+                ['name' => 'CRDB Bank A/C'],
+                [
+                    'type' => 'bank_transfer',
+                    'account_number_or_till' => '0150123456789',
+                    'account_name' => 'Anagkazo Autoparts Limited',
+                    'is_active' => true,
+                ]
+            );
+            \App\Models\PaymentMethod::firstOrCreate(
+                ['name' => 'Vodacom Lipa Namba (M-Pesa)'],
+                [
+                    'type' => 'mobile_money',
+                    'account_number_or_till' => '5522331',
+                    'account_name' => 'Anagkazo Autoparts',
+                    'is_active' => true,
+                ]
+            );
         }
     }
 }
+
