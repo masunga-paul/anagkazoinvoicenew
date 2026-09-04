@@ -1,4 +1,4 @@
-<div wire:poll.4s class="min-h-screen bg-[#f3f4f6] text-zinc-900 py-6 px-4 sm:px-6 lg:px-8 font-sans antialiased">
+<div x-data="{ resetModalOpen: false, confirmInput: '' }" wire:poll.4s class="min-h-screen bg-[#f3f4f6] text-zinc-900 py-6 px-4 sm:px-6 lg:px-8 font-sans antialiased">
     {{-- Global Top Navigation Bar with Deep Navy Styling --}}
     <header class="sticky top-4 z-40 max-w-7xl mx-auto mb-8 bg-white/95 backdrop-blur-md border border-zinc-200/90 rounded-2xl px-5 py-2.5 shadow-md flex items-center justify-between gap-4 transition-all duration-200">
         {{-- Left: Brand & Main Navigation --}}
@@ -109,7 +109,11 @@
                             <x-lucide name="shield-check" class="w-4 h-4 mr-1.5 text-blue-300" />
                             Security Credentials
                         </a>
-                        <button type="button" wire:click="openResetDataModal" class="inline-flex items-center px-4 py-2.5 rounded-xl bg-rose-950/60 hover:bg-rose-900/90 text-rose-200 hover:text-white font-semibold text-xs border border-rose-500/30 transition cursor-pointer">
+                        <button 
+                            type="button" 
+                            @click="resetModalOpen = true; confirmInput = ''; $wire.openResetDataModal()" 
+                            class="inline-flex items-center px-4 py-2.5 rounded-xl bg-rose-950/60 hover:bg-rose-900/90 text-rose-200 hover:text-white font-semibold text-xs border border-rose-500/30 transition cursor-pointer shadow-xs active:scale-95"
+                        >
                             <x-lucide name="trash-2" class="w-4 h-4 mr-1.5 text-rose-400" />
                             Wipe Operational Data
                         </button>
@@ -415,37 +419,120 @@
                 </table>
             </div>
         </div>
+    </main>
 
-        {{-- Danger Zone / System Maintenance (Admin Only) --}}
-        @if(auth()->user()?->isAdmin())
-            <div class="bg-rose-50/70 border border-rose-200 rounded-3xl p-6 sm:p-7 shadow-xs">
-                <div class="flex flex-col md:flex-row md:items-center justify-between gap-5">
-                    <div class="space-y-1 max-w-2xl">
-                        <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-800 text-[11px] font-bold tracking-wide uppercase">
-                            <x-lucide name="alert-triangle" class="w-3.5 h-3.5 text-rose-600" />
-                            System Maintenance & Reset
-                        </div>
-                        <h3 class="text-base font-bold text-zinc-950">Wipe Operational Database (Clean Slate)</h3>
-                        <p class="text-xs text-zinc-600 leading-relaxed">
-                            Permanently removes all transactional records (invoices, billing items, customer directory, and depot stock catalog). 
-                            <strong class="text-zinc-900 font-semibold">Administrator & Staff login credentials and configured Payment Methods will be safely preserved.</strong>
-                        </p>
+    {{-- Reset Database Confirmation Modal --}}
+    <div 
+        x-cloak 
+        x-show="resetModalOpen || $wire.showResetDataModal" 
+        x-transition:enter="transition ease-out duration-200"
+        x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100"
+        x-transition:leave="transition ease-in duration-150"
+        x-transition:leave-start="opacity-100"
+        x-transition:leave-end="opacity-0"
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-950/80 backdrop-blur-xs"
+        @keydown.escape.window="resetModalOpen = false; confirmInput = ''; $wire.cancelResetDataModal()"
+    >
+        <div 
+            @click.outside="resetModalOpen = false; confirmInput = ''; $wire.cancelResetDataModal()"
+            x-transition:enter="transition ease-out duration-200"
+            x-transition:enter-start="opacity-0 scale-95"
+            x-transition:enter-end="opacity-100 scale-100"
+            x-transition:leave="transition ease-in duration-150"
+            x-transition:leave-start="opacity-100 scale-100"
+            x-transition:leave-end="opacity-0 scale-95"
+            class="bg-white rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl border border-rose-200"
+        >
+            <div class="bg-[#0a192f] p-6 text-white flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-2xl bg-rose-500/20 border border-rose-500/30 flex items-center justify-center text-rose-400 shrink-0">
+                        <x-lucide name="alert-triangle" class="w-5 h-5" />
                     </div>
-                    <div class="shrink-0">
-                        <button 
-                            type="button" 
-                            wire:click="wipeOperationalData"
-                            wire:confirm="Are you sure you want to permanently wipe all operational records (invoices, items, customer accounts, and stock catalog)? Administrator & Staff logins and configured Payment Methods will be preserved."
-                            class="inline-flex items-center justify-center px-5 py-3 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-sm transition active:scale-95 cursor-pointer"
-                        >
-                            <x-lucide name="trash-2" class="w-4 h-4 mr-2" />
-                            Wipe Database Records
-                        </button>
+                    <div>
+                        <h3 class="text-base font-bold text-white">Wipe All Operational Data</h3>
+                        <p class="text-[11px] text-zinc-400">Permanent clean slate database reset</p>
                     </div>
                 </div>
+                <button 
+                    type="button" 
+                    @click="resetModalOpen = false; confirmInput = ''; $wire.cancelResetDataModal()"
+                    class="p-1.5 rounded-xl text-zinc-400 hover:text-white hover:bg-white/10 transition cursor-pointer"
+                    title="Close"
+                >
+                    <x-lucide name="x" class="w-5 h-5" />
+                </button>
             </div>
-        @endif
-    </main>
+
+            <div class="p-6 space-y-5 text-zinc-800">
+                <div class="p-4 rounded-2xl bg-rose-50 border border-rose-200 space-y-2">
+                    <p class="text-xs font-bold text-rose-900">
+                        Are you absolutely sure you want to wipe all operational data?
+                    </p>
+                    <p class="text-[11px] text-rose-700 leading-relaxed">
+                        This action will permanently delete all operational records (invoices, inventory, customer directory) and cannot be undone.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                    <div class="p-3.5 rounded-xl bg-zinc-50 border border-zinc-200">
+                        <span class="font-bold text-rose-600 block mb-1.5 flex items-center gap-1">
+                            <x-lucide name="x-circle" class="w-3.5 h-3.5" /> What gets DELETED:
+                        </span>
+                        <ul class="space-y-1 text-[11px] text-zinc-600 list-disc list-inside">
+                            <li>All Invoices & Line Items</li>
+                            <li>All Tyre Stock & Catalog</li>
+                            <li>All Customer Accounts</li>
+                        </ul>
+                    </div>
+                    <div class="p-3.5 rounded-xl bg-emerald-50/50 border border-emerald-200">
+                        <span class="font-bold text-emerald-700 block mb-1.5 flex items-center gap-1">
+                            <x-lucide name="check-circle" class="w-3.5 h-3.5" /> What is PRESERVED:
+                        </span>
+                        <ul class="space-y-1 text-[11px] text-zinc-600 list-disc list-inside">
+                            <li>Admin & Staff Logins</li>
+                            <li>Payment Methods (Banks/Tills)</li>
+                            <li>Security Credentials</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="block text-xs font-semibold text-zinc-700">
+                        Please type <span class="font-mono font-bold text-rose-600 bg-rose-100 px-1.5 py-0.5 rounded border border-rose-300">DELETE</span> to confirm:
+                    </label>
+                    <input 
+                        type="text" 
+                        x-model="confirmInput"
+                        wire:model.live="confirmResetText"
+                        placeholder="Type DELETE" 
+                        class="w-full text-xs px-4 py-2.5 rounded-xl border border-zinc-300 focus:border-rose-600 focus:ring-1 focus:ring-rose-600 text-zinc-900 font-mono tracking-wider"
+                    />
+                </div>
+
+                <div class="pt-4 border-t border-zinc-100 flex items-center justify-end gap-2">
+                    <button 
+                        type="button" 
+                        @click="resetModalOpen = false; confirmInput = ''; $wire.cancelResetDataModal()"
+                        class="px-4 py-2.5 rounded-xl text-xs font-bold text-zinc-600 hover:bg-zinc-100 transition cursor-pointer"
+                    >
+                        Cancel
+                    </button>
+                    <button 
+                        type="button" 
+                        wire:click="wipeOperationalData"
+                        @click="if (confirmInput.trim().toUpperCase() === 'DELETE') { resetModalOpen = false; }"
+                        :disabled="confirmInput.trim().toUpperCase() !== 'DELETE'"
+                        class="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-bold transition shadow-xs cursor-pointer inline-flex items-center gap-1.5"
+                    >
+                        <x-lucide name="trash-2" class="w-3.5 h-3.5" />
+                        <span wire:loading.remove wire:target="wipeOperationalData">Permanently Wipe Data</span>
+                        <span wire:loading wire:target="wipeOperationalData">Wiping Data...</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <x-page-footer />
 </div>
