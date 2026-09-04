@@ -183,6 +183,7 @@
                                 <x-lucide name="calendar" class="w-4 h-4" />
                             </div>
                         </div>
+                        @error('due_date') <span class="text-xs text-rose-500 mt-1 block">{{ $message }}</span> @enderror
                     </div>
 
                     <div>
@@ -248,6 +249,20 @@
                         <span class="text-[11px] text-zinc-400">Currency: TZS (Tanzanian Shillings)</span>
                     </div>
 
+                    @error('items')
+                        <div class="p-3 bg-rose-50 border border-rose-200 text-rose-800 text-xs font-semibold rounded-xl flex items-center gap-2">
+                            <x-lucide name="alert-circle" class="w-4 h-4 shrink-0 text-rose-600" />
+                            <span>{{ $message }}</span>
+                        </div>
+                    @enderror
+
+                    @if(session()->has('stock_error'))
+                        <div class="p-3 bg-rose-50 border border-rose-200 text-rose-800 text-xs font-semibold rounded-xl flex items-center gap-2">
+                            <x-lucide name="alert-triangle" class="w-4 h-4 shrink-0 text-rose-600" />
+                            <span>{{ session('stock_error') }}</span>
+                        </div>
+                    @endif
+
                     <div class="border border-zinc-200/80 rounded-xl overflow-hidden divide-y divide-zinc-100">
                         {{-- Repeater Header --}}
                         <div class="bg-zinc-50/70 px-3 py-2 text-[11px] font-semibold text-zinc-500 uppercase tracking-wider grid grid-cols-12 gap-2">
@@ -273,24 +288,53 @@
                                         @if(count($products) > 0)
                                             <select 
                                                 wire:change="selectProduct({{ $index }}, $event.target.value)"
-                                                class="w-full text-[11px] text-zinc-500 bg-zinc-50 border border-zinc-200 rounded px-1.5 py-0.5"
+                                                class="w-full text-[11px] text-zinc-700 bg-zinc-50 border border-zinc-200 rounded px-1.5 py-1 focus:border-[#1e3a8a]"
                                             >
                                                 <option value="">-- Or pick stock tyre --</option>
                                                 @foreach($products as $prod)
-                                                    <option value="{{ $prod->id }}">{{ $prod->brand }} {{ $prod->size }} ({{ number_format($prod->unit_price_tzs) }} TZS)</option>
+                                                    <option value="{{ $prod->id }}" {{ $prod->stock_quantity <= 0 ? 'disabled' : '' }}>
+                                                        {{ $prod->brand }} {{ $prod->size }} - {{ number_format($prod->unit_price_tzs) }} TZS ({{ $prod->stock_quantity > 0 ? $prod->stock_quantity.' in stock' : 'OUT OF STOCK' }})
+                                                    </option>
                                                 @endforeach
                                             </select>
                                         @endif
+                                        @if(!empty($item['tyre_product_id']))
+                                            <div class="pt-0.5">
+                                                @if(isset($item['available_stock']) && $item['available_stock'] > 0)
+                                                    <span class="text-[10px] text-emerald-800 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded font-semibold inline-flex items-center gap-1">
+                                                        <x-lucide name="package-check" class="w-3 h-3 text-emerald-600" />
+                                                        Available Depot Stock: {{ $item['available_stock'] }} tyres
+                                                    </span>
+                                                @elseif(isset($item['available_stock']) && $item['available_stock'] <= 0)
+                                                    <span class="text-[10px] text-rose-800 bg-rose-50 border border-rose-200 px-1.5 py-0.5 rounded font-bold inline-flex items-center gap-1">
+                                                        <x-lucide name="alert-triangle" class="w-3 h-3 text-rose-600" />
+                                                        Out of Stock (0 available)
+                                                    </span>
+                                                @endif
+                                            </div>
+                                        @endif
+                                        @error("items.{$index}.item_description")
+                                            <span class="text-[10px] text-rose-600 font-medium block">{{ $message }}</span>
+                                        @enderror
                                     </div>
 
                                     {{-- QTY --}}
-                                    <div class="col-span-2">
+                                    <div class="col-span-2 space-y-1">
                                         <input 
                                             type="number" 
                                             min="1" 
+                                            @if(!empty($item['available_stock'])) max="{{ $item['available_stock'] }}" @endif
                                             wire:model.live.debounce.150ms="items.{{ $index }}.quantity"
-                                            class="w-full text-xs text-center rounded-lg border border-zinc-200 px-2 py-1.5 text-zinc-900 focus:border-[#1e3a8a] focus:ring-0"
+                                            class="w-full text-xs text-center rounded-lg border {{ !empty($item['available_stock']) && ($item['quantity'] ?? 0) > $item['available_stock'] ? 'border-rose-500 bg-rose-50/50 text-rose-900 font-bold' : 'border-zinc-200 text-zinc-900' }} px-2 py-1.5 focus:border-[#1e3a8a] focus:ring-0"
                                         />
+                                        @if(!empty($item['available_stock']) && ($item['quantity'] ?? 0) > $item['available_stock'])
+                                            <span class="text-[10px] text-rose-600 font-bold block leading-tight text-center">
+                                                Exceeds (max {{ $item['available_stock'] }})
+                                            </span>
+                                        @endif
+                                        @error("items.{$index}.quantity")
+                                            <span class="text-[10px] text-rose-600 font-medium block text-center">{{ $message }}</span>
+                                        @enderror
                                     </div>
 
                                     {{-- Unit Price --}}
@@ -301,6 +345,9 @@
                                             wire:model.live.debounce.150ms="items.{{ $index }}.unit_price"
                                             class="w-full text-xs text-right rounded-lg border border-zinc-200 px-2 py-1.5 text-zinc-900 focus:border-[#1e3a8a] focus:ring-0"
                                         />
+                                        @error("items.{$index}.unit_price")
+                                            <span class="text-[10px] text-rose-600 font-medium block text-right">{{ $message }}</span>
+                                        @enderror
                                     </div>
 
                                     {{-- Amount / Subtotal for line --}}
@@ -364,19 +411,28 @@
 
                     {{-- Discount, Tax Rate %, Calculated Tax, and Total Row --}}
                     <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 pt-1">
-                        {{-- Discount --}}
+                        {{-- Discount (Default 0, editable by Admin & Staff) --}}
                         <div>
-                            <label for="discount_tzs" class="block text-[11px] font-semibold text-zinc-700 mb-1">Discount (TZS)</label>
+                            <div class="flex items-center justify-between mb-1">
+                                <label for="discount_tzs" class="block text-[11px] font-semibold text-zinc-700">Discount (TZS)</label>
+                                <span class="text-[10px] text-zinc-400 font-medium">Default: 0</span>
+                            </div>
                             <div class="relative">
                                 <span class="absolute inset-y-0 left-0 pl-2.5 flex items-center text-[10px] font-semibold text-zinc-400 pointer-events-none">TZS</span>
                                 <input 
                                     type="number" 
                                     step="1000" 
+                                    min="0"
                                     id="discount_tzs" 
                                     wire:model.live.debounce.200ms="discount_tzs" 
-                                    class="w-full text-xs rounded-xl border border-zinc-200 pl-10 pr-2.5 py-2 text-zinc-900 focus:border-[#1e3a8a] focus:ring-0"
+                                    placeholder="0"
+                                    class="w-full text-xs rounded-xl border border-zinc-200 pl-10 pr-2.5 py-2 text-zinc-900 focus:border-[#1e3a8a] focus:ring-0 font-medium"
                                 />
                             </div>
+                            @error('discount_tzs')
+                                <span class="text-[10px] text-rose-600 font-medium mt-1 block">{{ $message }}</span>
+                            @enderror
+                            <span class="text-[10px] text-zinc-400 mt-1 block">Max: TZS {{ number_format($subtotal_tzs) }}</span>
                         </div>
 
                         {{-- Tax Rate % --}}

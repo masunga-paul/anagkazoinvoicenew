@@ -88,17 +88,30 @@ class InvoiceList extends Component
             return;
         }
 
-        $invoice = Invoice::find($targetId);
+        $invoice = Invoice::with('items')->find($targetId);
         if ($invoice) {
             $num = $invoice->invoice_number;
-            $invoice->delete();
-            session()->flash('success', "Invoice {$num} deleted successfully.");
+            \Illuminate\Support\Facades\DB::transaction(function () use ($invoice) {
+                if (in_array($invoice->status, ['issued', 'paid'])) {
+                    foreach ($invoice->items as $item) {
+                        if ($item->tyre_product_id) {
+                            $product = \App\Models\TyreProduct::lockForUpdate()->find($item->tyre_product_id);
+                            if ($product) {
+                                $product->increment('stock_quantity', (int) $item->quantity);
+                            }
+                        }
+                    }
+                }
+                $invoice->delete();
+            });
+            session()->flash('success', "Invoice {$num} deleted and inventory stock restored.");
         }
 
         $this->showDeleteModal = false;
         $this->deletingInvoiceId = null;
         $this->deletingInvoiceNumber = null;
     }
+
 
     public function render()
     {

@@ -37,7 +37,7 @@ class CreateInvoice extends Component
 
     public array $items = [];
 
-    public int|float|string $discount_tzs = 500000;
+    public int|float|string $discount_tzs = 0;
 
     public int|float|string $tax_rate = 18.0; // Flexible VAT % for inclusive
 
@@ -73,6 +73,7 @@ class CreateInvoice extends Component
         $this->invoice_number = Invoice::generateKariakooInvoiceNumber();
         $this->issue_date = now()->format('Y-m-d');
         $this->due_date = now()->addDays(14)->format('Y-m-d');
+        $this->discount_tzs = 0;
 
         // Check if there are seeded customers to pick an authentic Kariakoo customer
         $firstCustomer = Customer::first();
@@ -83,28 +84,32 @@ class CreateInvoice extends Component
         }
 
         // Initialize default items from database products
-        $prod1 = TyreProduct::where('is_active', true)->first();
-        $prod2 = TyreProduct::where('is_active', true)->skip(1)->first();
+        $prod1 = TyreProduct::where('is_active', true)->where('stock_quantity', '>', 0)->first();
+        $prod2 = TyreProduct::where('is_active', true)->where('stock_quantity', '>', 0)->skip(1)->first();
 
         $this->items = [];
         if ($prod1) {
+            $qty1 = min(4, max(1, $prod1->stock_quantity));
             $this->items[] = [
                 'tyre_product_id' => $prod1->id,
                 'item_description' => "{$prod1->brand} {$prod1->size} {$prod1->pattern}",
-                'quantity' => 10,
+                'quantity' => $qty1,
+                'available_stock' => $prod1->stock_quantity,
                 'unit_label' => 'tyres',
                 'unit_price' => (float) $prod1->unit_price_tzs,
-                'amount' => 10 * (float) $prod1->unit_price_tzs,
+                'amount' => $qty1 * (float) $prod1->unit_price_tzs,
             ];
         }
-        if ($prod2) {
+        if ($prod2 && $prod2->stock_quantity > 0) {
+            $qty2 = min(2, max(1, $prod2->stock_quantity));
             $this->items[] = [
                 'tyre_product_id' => $prod2->id,
                 'item_description' => "{$prod2->brand} {$prod2->size} {$prod2->pattern}",
-                'quantity' => 4,
+                'quantity' => $qty2,
+                'available_stock' => $prod2->stock_quantity,
                 'unit_label' => 'tyres',
                 'unit_price' => (float) $prod2->unit_price_tzs,
-                'amount' => 4 * (float) $prod2->unit_price_tzs,
+                'amount' => $qty2 * (float) $prod2->unit_price_tzs,
             ];
         }
 
@@ -113,13 +118,14 @@ class CreateInvoice extends Component
                 'tyre_product_id' => null,
                 'item_description' => 'Commercial Heavy Truck Radial Tyre',
                 'quantity' => 1,
+                'available_stock' => null,
                 'unit_label' => 'tyres',
                 'unit_price' => 500000,
                 'amount' => 500000,
             ];
         }
 
-        $this->discount_tzs = 200000;
+        $this->discount_tzs = 0;
         $this->recalculateTotals();
 
         // Default to preferred or active payment methods
@@ -172,18 +178,30 @@ class CreateInvoice extends Component
     protected function rules(): array
     {
         return [
-            'customer_name' => 'required|string|min:3',
+            'customer_name' => 'required|string|min:2|max:255',
             'billing_address' => 'required|string|min:3',
             'issue_date' => 'required|date',
-            'due_date' => 'required|date',
+            'due_date' => 'required|date|after_or_equal:issue_date',
             'items' => 'required|array|min:1',
-            'items.*.item_description' => 'required|string',
+            'items.*.item_description' => 'required|string|min:2',
             'items.*.quantity' => 'required|integer|min:1',
             'items.*.unit_price' => 'required|numeric|min:0',
+            'discount_tzs' => 'nullable|numeric|min:0',
+            'tax_rate' => 'nullable|numeric|min:0|max:100',
         ];
     }
 
-
+    protected function messages(): array
+    {
+        return [
+            'due_date.after_or_equal' => 'Due date must be on or after the issue date.',
+            'items.min' => 'At least one line item is required.',
+            'items.*.item_description.required' => 'Please provide an item description.',
+            'items.*.quantity.min' => 'Quantity must be at least 1.',
+            'items.*.unit_price.min' => 'Cost price cannot be negative.',
+            'discount_tzs.min' => 'Discount cannot be negative.',
+        ];
+    }
 
     public function addItem(): void
     {
@@ -191,6 +209,7 @@ class CreateInvoice extends Component
             'tyre_product_id' => null,
             'item_description' => '',
             'quantity' => 1,
+            'available_stock' => null,
             'unit_label' => 'tyres',
             'unit_price' => 0,
             'amount' => 0,
@@ -240,10 +259,21 @@ class CreateInvoice extends Component
     {
         $product = TyreProduct::find($productId);
         if ($product && isset($this->items[$index])) {
+            if ($product->stock_quantity <= 0) {
+                session()->flash('stock_error', "Warning: {$product->brand} {$product->size} is currently OUT OF STOCK in Kariakoo depot (0 available).");
+            }
+
+            $currentQty = max(1, (int) ($this->items[$index]['quantity'] ?? 1));
+            if ($product->stock_quantity > 0 && $currentQty > $product->stock_quantity) {
+                $currentQty = $product->stock_quantity;
+            }
+
             $this->items[$index]['tyre_product_id'] = $product->id;
             $this->items[$index]['item_description'] = "{$product->brand} {$product->size} {$product->pattern}";
+            $this->items[$index]['available_stock'] = $product->stock_quantity;
+            $this->items[$index]['quantity'] = $currentQty;
             $this->items[$index]['unit_price'] = (float) $product->unit_price_tzs;
-            $this->items[$index]['amount'] = max(1, (int) $this->items[$index]['quantity']) * (float) $product->unit_price_tzs;
+            $this->items[$index]['amount'] = $currentQty * (float) $product->unit_price_tzs;
             $this->recalculateTotals();
         }
     }
@@ -252,7 +282,7 @@ class CreateInvoice extends Component
     {
         $this->recalculateTotals();
 
-        if ($property && in_array(explode('.', $property)[0], ['customer_name', 'billing_address', 'issue_date', 'due_date', 'items', 'new_pm_name', 'new_pm_account'])) {
+        if ($property && in_array(explode('.', $property)[0], ['customer_name', 'billing_address', 'issue_date', 'due_date', 'items', 'discount_tzs', 'tax_rate', 'new_pm_name', 'new_pm_account'])) {
             $this->validateOnly($property);
         }
     }
@@ -297,6 +327,13 @@ class CreateInvoice extends Component
             foreach ($this->items as $idx => $item) {
                 $qty = is_numeric($item['quantity'] ?? null) ? max(0, (float) $item['quantity']) : 0.0;
                 $price = is_numeric($item['unit_price'] ?? null) ? max(0, (float) $item['unit_price']) : 0.0;
+                
+                // Refresh available stock if tyre_product_id is set
+                if (! empty($item['tyre_product_id'])) {
+                    $prod = TyreProduct::find($item['tyre_product_id']);
+                    $this->items[$idx]['available_stock'] = $prod ? $prod->stock_quantity : null;
+                }
+
                 $lineAmount = round($qty * $price, 2);
                 $this->items[$idx]['amount'] = $lineAmount;
                 $subtotal += $lineAmount;
@@ -350,16 +387,41 @@ class CreateInvoice extends Component
 
     private function createInvoiceRecord(string $targetStatus = 'issued'): Invoice
     {
-        $this->validate([
-            'customer_name' => 'required|string|min:3',
-            'billing_address' => 'required|string',
-            'issue_date' => 'required|date',
-            'due_date' => 'required|date',
-            'items' => 'required|array|min:1',
-            'items.*.item_description' => 'required|string',
-            'items.*.quantity' => 'required|integer|min:1',
-            'items.*.unit_price' => 'required|numeric|min:0',
-        ]);
+        $this->recalculateTotals();
+
+        $this->validate();
+
+        // Realistic Validation 1: Discount cannot exceed subtotal
+        $discount = is_numeric($this->discount_tzs) ? (float) $this->discount_tzs : 0.0;
+        if ($discount > $this->subtotal_tzs && $this->subtotal_tzs > 0) {
+            $this->addError('discount_tzs', 'Discount (TZS '.number_format($discount).') cannot exceed the subtotal (TZS '.number_format($this->subtotal_tzs).').');
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'discount_tzs' => 'Discount cannot exceed the invoice subtotal.',
+            ]);
+        }
+
+        // Realistic Validation 2: Prevent adding/invoicing more stock than available in depot
+        $productQuantities = [];
+        foreach ($this->items as $idx => $item) {
+            if (! empty($item['tyre_product_id'])) {
+                $pid = (int) $item['tyre_product_id'];
+                $productQuantities[$pid] = ($productQuantities[$pid] ?? 0) + (int) $item['quantity'];
+            }
+        }
+
+        foreach ($productQuantities as $productId => $requestedQty) {
+            $product = TyreProduct::find($productId);
+            if ($product) {
+                if ($product->stock_quantity < $requestedQty) {
+                    $errMessage = "Cannot invoice {$requestedQty} units of {$product->brand} {$product->size}. Only {$product->stock_quantity} units available in Kariakoo depot stock.";
+                    $this->addError('items', $errMessage);
+                    session()->flash('stock_error', $errMessage);
+                    throw \Illuminate\Validation\ValidationException::withMessages([
+                        'items' => $errMessage,
+                    ]);
+                }
+            }
+        }
 
         $customer = null;
         if ($this->customer_id) {
@@ -377,42 +439,52 @@ class CreateInvoice extends Component
             );
         }
 
-        $invoice = Invoice::create([
-            'invoice_number' => $this->invoice_number,
-            'customer_id' => $customer->id,
-            'customer_name' => $this->customer_name,
-            'billing_address' => $this->billing_address,
-            'issuer_name' => $this->issuer_name,
-            'issuer_phone' => $this->issuer_phone,
-            'issue_date' => $this->issue_date,
-            'due_date' => $this->due_date,
-            'payment_terms' => $this->payment_terms,
-            'status' => $targetStatus,
-            'subtotal_tzs' => (float) $this->subtotal_tzs,
-            'discount_tzs' => is_numeric($this->discount_tzs) ? (float) $this->discount_tzs : 0.0,
-            'tax_rate_percent' => $this->tax_type === 'exclusive' ? 0.0 : (is_numeric($this->tax_rate) ? (float) $this->tax_rate : 0.0),
-            'tax_type' => $this->tax_type,
-            'tax_amount_tzs' => (float) $this->tax_amount_tzs,
-            'total_amount_tzs' => (float) $this->total_amount_tzs,
-            'amount_paid_tzs' => $targetStatus === 'paid' ? (float) $this->total_amount_tzs : 0.0,
-            'selected_payment_method_ids' => array_values(array_map('intval', (array) $this->selected_payment_method_ids)),
-            'notes' => $this->notes,
-        ]);
-
-        foreach ($this->items as $item) {
-            $invoice->items()->create([
-                'tyre_product_id' => $item['tyre_product_id'] ?? null,
-                'item_description' => $item['item_description'],
-                'quantity' => $item['quantity'],
-                'unit_label' => $item['unit_label'] ?? 'tyres',
-                'unit_price_tzs' => $item['unit_price'],
-                'total_price_tzs' => $item['amount'],
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($customer, $targetStatus) {
+            $invoice = Invoice::create([
+                'invoice_number' => $this->invoice_number,
+                'customer_id' => $customer->id,
+                'customer_name' => $this->customer_name,
+                'billing_address' => $this->billing_address,
+                'issuer_name' => $this->issuer_name,
+                'issuer_phone' => $this->issuer_phone,
+                'issue_date' => $this->issue_date,
+                'due_date' => $this->due_date,
+                'payment_terms' => $this->payment_terms,
+                'status' => $targetStatus,
+                'subtotal_tzs' => (float) $this->subtotal_tzs,
+                'discount_tzs' => is_numeric($this->discount_tzs) ? (float) $this->discount_tzs : 0.0,
+                'tax_rate_percent' => $this->tax_type === 'exclusive' ? 0.0 : (is_numeric($this->tax_rate) ? (float) $this->tax_rate : 0.0),
+                'tax_type' => $this->tax_type,
+                'tax_amount_tzs' => (float) $this->tax_amount_tzs,
+                'total_amount_tzs' => (float) $this->total_amount_tzs,
+                'amount_paid_tzs' => $targetStatus === 'paid' ? (float) $this->total_amount_tzs : 0.0,
+                'selected_payment_method_ids' => array_values(array_map('intval', (array) $this->selected_payment_method_ids)),
+                'notes' => $this->notes,
             ]);
-        }
 
-        $this->saved_invoice_id = $invoice->id;
+            foreach ($this->items as $item) {
+                $invoice->items()->create([
+                    'tyre_product_id' => $item['tyre_product_id'] ?? null,
+                    'item_description' => $item['item_description'],
+                    'quantity' => (int) $item['quantity'],
+                    'unit_label' => $item['unit_label'] ?? 'tyres',
+                    'unit_price_tzs' => (float) $item['unit_price'],
+                    'total_price_tzs' => (float) $item['amount'],
+                ]);
 
-        return $invoice;
+                // Dynamic stock reduction when invoice is issued or marked paid
+                if (in_array($targetStatus, ['issued', 'paid']) && ! empty($item['tyre_product_id'])) {
+                    $product = TyreProduct::lockForUpdate()->find($item['tyre_product_id']);
+                    if ($product) {
+                        $product->decrement('stock_quantity', (int) $item['quantity']);
+                    }
+                }
+            }
+
+            $this->saved_invoice_id = $invoice->id;
+
+            return $invoice;
+        });
     }
 
     public function resetInvoiceForm(): void
@@ -423,13 +495,14 @@ class CreateInvoice extends Component
         $this->saved_invoice_id = null;
         $this->discount_tzs = 0;
 
-        $prod1 = TyreProduct::where('is_active', true)->first();
+        $prod1 = TyreProduct::where('is_active', true)->where('stock_quantity', '>', 0)->first();
         $this->items = [];
         if ($prod1) {
             $this->items[] = [
                 'tyre_product_id' => $prod1->id,
                 'item_description' => "{$prod1->brand} {$prod1->size} {$prod1->pattern}",
                 'quantity' => 1,
+                'available_stock' => $prod1->stock_quantity,
                 'unit_label' => 'tyres',
                 'unit_price' => (float) $prod1->unit_price_tzs,
                 'amount' => (float) $prod1->unit_price_tzs,
@@ -439,6 +512,7 @@ class CreateInvoice extends Component
                 'tyre_product_id' => null,
                 'item_description' => 'Commercial Heavy Truck Radial Tyre',
                 'quantity' => 1,
+                'available_stock' => null,
                 'unit_label' => 'tyres',
                 'unit_price' => 500000,
                 'amount' => 500000,
@@ -447,6 +521,7 @@ class CreateInvoice extends Component
 
         $this->recalculateTotals();
     }
+
 
     public function downloadPdf()
     {
