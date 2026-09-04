@@ -51,12 +51,21 @@ class Overview extends Component
             return;
         }
 
-        DB::transaction(function () {
-            InvoiceItem::query()->delete();
-            Invoice::query()->delete();
-            TyreProduct::query()->delete();
-            Customer::query()->delete();
-        });
+        \Illuminate\Support\Facades\Schema::disableForeignKeyConstraints();
+        try {
+            DB::transaction(function () {
+                InvoiceItem::query()->delete();
+                Invoice::query()->delete();
+                TyreProduct::query()->delete();
+                Customer::query()->delete();
+
+                if (DB::getDriverName() === 'sqlite') {
+                    DB::statement("DELETE FROM sqlite_sequence WHERE name IN ('invoices', 'invoice_items', 'tyre_products', 'customers')");
+                }
+            });
+        } finally {
+            \Illuminate\Support\Facades\Schema::enableForeignKeyConstraints();
+        }
 
         $this->showResetDataModal = false;
         $this->confirmResetText = '';

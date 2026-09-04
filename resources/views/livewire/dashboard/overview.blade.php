@@ -415,6 +415,36 @@
                 </table>
             </div>
         </div>
+
+        {{-- Danger Zone / System Maintenance (Admin Only) --}}
+        @if(auth()->user()?->isAdmin())
+            <div class="bg-rose-50/70 border border-rose-200 rounded-3xl p-6 sm:p-7 shadow-xs">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-5">
+                    <div class="space-y-1 max-w-2xl">
+                        <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-800 text-[11px] font-bold tracking-wide uppercase">
+                            <x-lucide name="alert-triangle" class="w-3.5 h-3.5 text-rose-600" />
+                            System Maintenance & Reset
+                        </div>
+                        <h3 class="text-base font-bold text-zinc-950">Wipe Operational Database (Clean Slate)</h3>
+                        <p class="text-xs text-zinc-600 leading-relaxed">
+                            Permanently removes all transactional records (invoices, billing items, customer directory, and depot stock catalog). 
+                            <strong class="text-zinc-900 font-semibold">Administrator & Staff login credentials and configured Payment Methods will be safely preserved.</strong>
+                        </p>
+                    </div>
+                    <div class="shrink-0">
+                        <button 
+                            type="button" 
+                            wire:click="wipeOperationalData"
+                            wire:confirm="Are you sure you want to permanently wipe all operational records (invoices, items, customer accounts, and stock catalog)? Administrator & Staff logins and configured Payment Methods will be preserved."
+                            class="inline-flex items-center justify-center px-5 py-3 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-sm transition active:scale-95 cursor-pointer"
+                        >
+                            <x-lucide name="trash-2" class="w-4 h-4 mr-2" />
+                            Wipe Database Records
+                        </button>
+                    </div>
+                </div>
+            </div>
+        @endif
     </main>
 
     <x-page-footer />
