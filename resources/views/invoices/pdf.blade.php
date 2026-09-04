@@ -361,8 +361,8 @@
                 <div class="address-body">
                     Plot 42, Msimbazi & Uhuru Street, Kariakoo<br>
                     P.O. Box 24901, Dar es Salaam, Tanzania<br>
-                    <strong>TIN:</strong> 142-984-712 &nbsp;|&nbsp; <strong>VRN:</strong> 40-029184-Z<br>
-                    <strong>Tel:</strong> +255 754 889 912 &nbsp;|&nbsp; <strong>Email:</strong> sales@anagkazo.co.tz<br>
+                    <strong>TIN:</strong> 188-458-408 &nbsp;|&nbsp; <strong></strong> <br>
+                    <strong>Tel:</strong> +255 655 552 040 &nbsp;|&nbsp; <strong>Email:</strong> sales@anagkazo.co.tz<br>
                     @if($invoice->issuer_name || $invoice->issuer_phone)
                         <strong>Issued by:</strong> {{ $invoice->issuer_name ?? 'Commercial Desk' }} {{ $invoice->issuer_phone ? '('.$invoice->issuer_phone.')' : '' }}
                     @endif

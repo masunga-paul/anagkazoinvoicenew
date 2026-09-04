@@ -177,8 +177,8 @@
                     <div class="text-zinc-600 text-xs leading-relaxed mt-1.5 space-y-0.5">
                         <p>Plot 42, Msimbazi & Uhuru Street, Kariakoo</p>
                         <p>P.O. Box 24901, Dar es Salaam, Tanzania</p>
-                        <p class="text-zinc-500 font-mono text-[11px]"><strong>TIN:</strong> 142-984-712 | <strong>VRN:</strong> 40-029184-Z</p>
-                        <p><strong>Tel:</strong> +255 754 889 912 | <strong>Email:</strong> sales@anagkazo.co.tz</p>
+                        <p class="text-zinc-500 font-mono text-[11px]"><strong>TIN:</strong> 188-458-408 | <strong></strong> </p>
+                        <p><strong>Tel:</strong> +255 655 552 040 | <strong>Email:</strong> sales@anagkazo.co.tz</p>
                     </div>
                     @if($invoice->issuer_name || $invoice->issuer_phone)
                         <div class="mt-2.5 pt-2 border-t border-zinc-200/60 flex items-center gap-1.5 text-xs text-[#1e3a8a] font-medium">

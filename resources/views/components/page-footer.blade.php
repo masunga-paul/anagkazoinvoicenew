@@ -84,7 +84,7 @@
                     </p>
                     <p class="flex items-center gap-1.5">
                         <x-lucide name="phone" class="w-3.5 h-3.5 text-zinc-400 shrink-0" />
-                        <span class="font-mono">+255 754 889 912</span>
+                        <span class="font-mono">+255 655 552 040</span>
                     </p>
                     <p class="flex items-center gap-1.5">
                         <x-lucide name="mail" class="w-3.5 h-3.5 text-zinc-400 shrink-0" />

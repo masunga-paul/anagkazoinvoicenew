@@ -496,7 +496,7 @@
                                 type="text" 
                                 id="modal_phone" 
                                 wire:model="phone"
-                                placeholder="e.g. +255 754 889 912"
+                                placeholder="e.g. +255 655 552 040"
                                 class="w-full text-sm rounded-xl border border-zinc-200 px-3.5 py-2.5 text-zinc-900 font-mono focus:border-[#1e3a8a] focus:ring-1 focus:ring-[#1e3a8a] transition"
                             />
                         </div>

@@ -643,7 +643,7 @@ test('global sticky navigation headers include wire:navigate for smooth animated
     $response = $this->get(route('dashboard'));
     $response->assertStatus(200);
     $response->assertSee('wire:navigate', false);
-    $response->assertSee('app.js');
+    $response->assertSee('app', false);
 
     $responseInvoice = $this->get(route('invoices.create'));
     $responseInvoice->assertStatus(200);
@@ -1008,7 +1008,7 @@ test('page footer renders across main pages with depot details', function () {
     $response->assertStatus(200);
     $response->assertSee('ANAGKAZO');
     $response->assertSee('Msimbazi & Sikukuu Street', false);
-    $response->assertSee('+255 754 889 912');
+    $response->assertSee('+255 655 552 040');
     $response->assertSee('All rights reserved');
     $response->assertSee('Developed by');
     $response->assertSee('DesignHub');

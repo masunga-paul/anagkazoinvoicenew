@@ -101,7 +101,7 @@
                     <p class="text-[10px] text-zinc-600 mt-0.5 leading-snug">
                         Kariakoo Wholesale & Commercial Tyre Distributors<br>
                         Plot 42, Msimbazi & Uhuru Street, Dar es Salaam, Tanzania<br>
-                        <strong>TIN:</strong> 142-984-712 | <strong>VRN:</strong> 40-029184-Z | <strong>Tel:</strong> +255 754 889 912
+                        <strong>TIN:</strong> 188-458-408 | <strong></strong>  | <strong>Tel:</strong> +255 655 552 040
                     </p>
                     @if($invoice->issuer_name || $invoice->issuer_phone)
                         <div class="text-[10px] text-zinc-700 mt-0.5 font-medium">
@@ -161,8 +161,8 @@
                 <div class="text-zinc-600 space-y-0.5 mt-0.5 leading-snug text-[10px]">
                     <p>Plot 42, Msimbazi & Uhuru Street, Kariakoo</p>
                     <p>P.O. Box 24901, Dar es Salaam, Tanzania</p>
-                    <p class="font-mono text-[10px]"><strong>TIN:</strong> 142-984-712 | <strong>VRN:</strong> 40-029184-Z</p>
-                    <p><strong>Tel:</strong> +255 754 889 912 | <strong>Email:</strong> sales@anagkazo.co.tz</p>
+                    <p class="font-mono text-[10px]"><strong>TIN:</strong> 188-458-408 | <strong></strong> </p>
+                    <p><strong>Tel:</strong> +255 655 552 040 | <strong>Email:</strong> sales@anagkazo.co.tz</p>
                 </div>
             </div>
 

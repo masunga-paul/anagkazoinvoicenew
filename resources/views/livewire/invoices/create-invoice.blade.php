@@ -235,7 +235,7 @@
                                 type="text" 
                                 id="issuer_phone" 
                                 wire:model.live.debounce.300ms="issuer_phone" 
-                                placeholder="e.g. +255 754 889 912"
+                                placeholder="e.g. +255 655 552 040"
                                 class="w-full text-xs rounded-lg border border-zinc-200 bg-white px-3 py-2 text-zinc-900 placeholder:text-zinc-400 focus:border-[#1e3a8a] focus:ring-1 focus:ring-[#1e3a8a] transition"
                             />
                         </div>
@@ -639,7 +639,7 @@
                             <span class="font-bold text-zinc-950 block text-xs">Anagkazo Autoparts Ltd</span>
                             <p class="text-zinc-500 text-[10px] leading-tight mt-0.5">
                                 Plot 42, Msimbazi & Uhuru Street, Kariakoo<br>
-                                TIN: 142-984-712 | VRN: 40-029184-Z | Tel: +255 754 889 912
+                                 TIN: 188-458-408 | Tel: +255 655 552 040
                             </p>
                             @if($issuer_name || $issuer_phone)
                                 <div class="mt-1.5 pt-1 border-t border-zinc-200/60 flex items-center gap-1.5 text-[10px] text-[#1e3a8a] font-medium">

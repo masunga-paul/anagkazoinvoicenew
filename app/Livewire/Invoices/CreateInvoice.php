@@ -21,11 +21,11 @@ class CreateInvoice extends Component
 
     public string $customer_name = 'PT Nusantara Digital Solusi';
 
-    public string $billing_address = "Jl. Jendral Sudirman No. 45 Jakarta Selatan, DKI Jakarta 12190 Indonesia\nTIN: 104-892-334 | Tel: +255 754 889 912";
+    public string $billing_address = "Jl. Jendral Sudirman No. 45 Jakarta Selatan, DKI Jakarta 12190 Indonesia\nTIN: 104-892-334 | Tel: +255 655 552 040";
 
     public string $issuer_name = 'Hussein Mwamba';
 
-    public string $issuer_phone = '+255 754 889 912';
+    public string $issuer_phone = '+255 655 552 040';
 
     public string $issue_date = '';
 
